@@ -64,8 +64,7 @@ public class Table extends Figure {
 			XmlBuilderUtils.addXmlId(tableElement, "tab_" + id);
 		}
 
-        // this is non TEI, to be reviewed
-		//tableElement.addAttribute(new Attribute("validated", String.valueOf(isGoodTable())));
+		tableElement.addAttribute(new Attribute("validated", String.valueOf(isGoodTable())));
 
 		if ((config.getGenerateTeiCoordinates() != null) && (config.getGenerateTeiCoordinates().contains("figure"))) {
 			XmlBuilderUtils.addCoords(tableElement, LayoutTokensUtil.getCoordsStringForOneBox(getLayoutTokens()));
@@ -103,8 +102,7 @@ public class Table extends Figure {
                     }
 
                     TaggingLabel clusterLabel = cluster.getTaggingLabel();
-                    //String clusterContent = LayoutTokensUtil.normalizeText(cluster.concatTokens());
-                    String clusterContent = LayoutTokensUtil.normalizeDehyphenizeText(cluster.concatTokens());
+                    String clusterContent = LayoutTokensUtil.normalizeText(cluster.concatTokens());
                     if (clusterLabel.equals(TaggingLabels.CITATION_MARKER)) {
                         try {
                             List<Node> refNodes = formatter.markReferencesTEILuceneBased(
@@ -131,7 +129,27 @@ public class Table extends Figure {
 
 
 		Element contentEl = XmlBuilderUtils.teiElement("table");
-		contentEl.appendChild(LayoutTokensUtil.toText(getContentTokens()));
+		if ((config.getGenerateTeiCoordinates() != null) && (config.getGenerateTeiCoordinates().contains("figure"))) {
+			for (LayoutToken t : getContentTokens())  {
+				Element cellEl = XmlBuilderUtils.teiElement("cell");
+				BoundingBox b = null;
+	            if (LayoutTokensUtil.noCoords(t)) {
+	                continue;
+			    }
+	            else  {
+			        b = BoundingBox.fromLayoutToken(t);
+	            }
+
+				
+				XmlBuilderUtils.addCoords(cellEl, b.toString());
+				cellEl.appendChild(t.t());
+				contentEl.appendChild(cellEl);				
+			}			
+		} else
+		{
+			contentEl.appendChild(LayoutTokensUtil.toText(getContentTokens()));			
+		}
+		
 		if ((config.getGenerateTeiCoordinates() != null) && (config.getGenerateTeiCoordinates().contains("figure"))) {
 			XmlBuilderUtils.addCoords(contentEl, LayoutTokensUtil.getCoordsStringForOneBox(getContentTokens()));
 		}
